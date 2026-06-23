@@ -941,26 +941,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (legalMoves.length === 0) return;
 
-    // Decide whether to play a "bad" blunder move based on difficulty
-    let selectRandom = false;
+    let chosenMove = null;
     const roll = Math.random();
-    
-    if (npcDifficulty === 'easy') {
-      selectRandom = (roll < 0.50); // 50% blunder
-    } else if (npcDifficulty === 'expert') {
-      selectRandom = (roll < 0.30); // 30% blunder
-    } else if (npcDifficulty === 'impossible') {
-      selectRandom = (roll < 0.10); // 10% blunder
-    }
 
-    let chosenMove;
-    if (selectRandom) {
-      // Pick random legal move
-      const randomIdx = Math.floor(Math.random() * legalMoves.length);
-      chosenMove = legalMoves[randomIdx];
-    } else {
-      // Compute best move using positional scoring heuristic
-      chosenMove = findBestNpcMove(legalMoves);
+    if (npcDifficulty === 'easy') {
+      // Easy Mode: 40% random blunder
+      if (roll < 0.40) {
+        const randomIdx = Math.floor(Math.random() * legalMoves.length);
+        chosenMove = legalMoves[randomIdx];
+      } else {
+        // Otherwise, evaluates active board only (1-ply heuristic)
+        chosenMove = findBestNpcMoveEasy(legalMoves);
+      }
+    } else if (npcDifficulty === 'expert') {
+      // Expert Mode: 15% blunder
+      if (roll < 0.15) {
+        const randomIdx = Math.floor(Math.random() * legalMoves.length);
+        chosenMove = legalMoves[randomIdx];
+      } else {
+        // Depth 2 minimax lookahead
+        chosenMove = findBestNpcMoveMinimax(legalMoves, 2);
+      }
+    } else if (npcDifficulty === 'impossible') {
+      // Impossible Mode: 0% blunder, minimax search depth 5 (depth 3 on wildcards for speed)
+      const depth = (activeBoardIndex === -1) ? 3 : 5;
+      chosenMove = findBestNpcMoveMinimax(legalMoves, depth);
     }
 
     if (chosenMove) {
@@ -968,145 +973,284 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Evaluate moves based on win/block/positional scoring
-  function findBestNpcMove(legalMoves) {
+  // --- EASY MODE STRATEGY ---
+  function findBestNpcMoveEasy(legalMoves) {
     let bestMove = null;
     let bestScore = -Infinity;
 
     legalMoves.forEach(move => {
-      const score = evaluateNpcMove(move.boardIndex, move.cellIndex);
+      const score = evaluateNpcMoveEasy(move.boardIndex, move.cellIndex);
       if (score > bestScore) {
         bestScore = score;
         bestMove = move;
       }
     });
 
-    return bestMove;
+    return bestMove || legalMoves[0];
   }
 
-  // Scoring function for potential NPC moves
-  function evaluateNpcMove(boardIndex, cellIndex) {
+  function evaluateNpcMoveEasy(boardIndex, cellIndex) {
     let score = 0;
-    
-    // --- SIMULATE MOVE ---
-    // Place move
+
+    // Simulate win on this mini-board
     board[boardIndex][cellIndex] = 'O';
-    let wonMini = false;
-    let wonGame = false;
-    
-    // Check mini board win
-    if (check3x3Win(board[boardIndex], 'O')) {
-      wonMini = true;
-      miniBoardsWon[boardIndex] = 'O';
-      
-      // Check large board win
-      if (check3x3Win(miniBoardsWon, 'O')) {
-        wonGame = true;
-      }
-    }
-    
-    // --- EVALUATIONS ---
-    
-    // 1. Instant game win is top priority
-    if (wonGame) {
-      score += 100000;
-    }
-    
-    // 2. Win the mini-board
-    if (wonMini && !wonGame) {
-      score += 5000;
-    }
-
-    // --- REVERT SIMULATED MOVE (Stage 1) ---
+    const wonMini = check3x3Win(board[boardIndex], 'O');
     board[boardIndex][cellIndex] = '';
-    if (wonMini) miniBoardsWon[boardIndex] = '';
 
-    // --- SIMULATE OPPONENT BLOCK CHECK ---
-    // Check if playing here blocks the player 'X' from winning this mini board
+    if (wonMini) score += 1000;
+
+    // Simulate opponent block on this mini-board
     board[boardIndex][cellIndex] = 'X';
-    let playerWonMini = false;
-    let playerWonGame = false;
-
-    if (check3x3Win(board[boardIndex], 'X')) {
-      playerWonMini = true;
-      miniBoardsWon[boardIndex] = 'X';
-      if (check3x3Win(miniBoardsWon, 'X')) {
-        playerWonGame = true;
-      }
-    }
-
-    // 3. Block opponent's instant game win
-    if (playerWonGame) {
-      score += 50000;
-    }
-
-    // 4. Block opponent's mini board win
-    if (playerWonMini && !playerWonGame) {
-      score += 2000;
-    }
-
-    // --- REVERT SIMULATED MOVE (Stage 2) ---
+    const blockedMini = check3x3Win(board[boardIndex], 'X');
     board[boardIndex][cellIndex] = '';
-    if (playerWonMini) miniBoardsWon[boardIndex] = '';
 
-    // --- STRATEGIC TARGET BOARD ANALYSIS ---
-    // Moving at cellIndex sends Player X to mini-board cellIndex.
-    const targetBoard = cellIndex;
-    
-    // 5. Avoid sending opponent to wildcard state (target board won/full)
-    if (miniBoardsWon[targetBoard] !== '' || isMiniBoardFull(board[targetBoard])) {
-      score -= 3000; // Sending to wildcard is generally terrible
-    } else {
-      // Opponent is locked to targetBoard. Check its safety.
-      
-      // Let's count how close Player X is to winning targetBoard
-      let xCloseToWin = checkCloseToWin(board[targetBoard], 'X');
-      if (xCloseToWin) {
-        // If we send them there, they can win it immediately! Very dangerous!
-        score -= 2000;
-      }
-      
-      // Check if we are close to winning targetBoard if they fail to play there
-      let oCloseToWin = checkCloseToWin(board[targetBoard], 'O');
-      if (oCloseToWin) {
-        score += 200;
-      }
-    }
+    if (blockedMini) score += 500;
 
-    // --- POSITIONAL STRATEGY ---
-    
-    // 6. Prefer center and corners in the mini-board
-    if (cellIndex === 4) {
-      score += 15; // Center
-    } else if ([0, 2, 6, 8].includes(cellIndex)) {
-      score += 8; // Corners
-    } else {
-      score += 2; // Edges
-    }
-
-    // 7. Prefer playing in center and corners on the large board
-    if (boardIndex === 4) {
-      score += 30; // Center board
-    } else if ([0, 2, 6, 8].includes(boardIndex)) {
-      score += 15; // Corner boards
-    } else {
-      score += 5; // Edge boards
-    }
-
-    // 8. Set up a 2-in-a-row inside this mini-board
+    // Set up a 2-in-a-row inside this mini-board
     if (createsTwoInARow(board[boardIndex], cellIndex, 'O')) {
       score += 100;
     }
 
-    // 9. Block opponent's 2-in-a-row setups
+    // Block opponent's 2-in-a-row setups inside this mini-board
     if (createsTwoInARow(board[boardIndex], cellIndex, 'X')) {
       score += 50;
     }
 
-    // Add small random noise to prevent predictable/repetitive play
+    // Prefer center/corners in the mini-board
+    if (cellIndex === 4) {
+      score += 15;
+    } else if ([0, 2, 6, 8].includes(cellIndex)) {
+      score += 8;
+    } else {
+      score += 2;
+    }
+
+    // Add noise for variation
     score += Math.random() * 5;
 
     return score;
+  }
+
+  // --- EXPERT & IMPOSSIBLE MINIMAX STRATEGY ---
+  function findBestNpcMoveMinimax(legalMoves, depth) {
+    let bestMove = null;
+    let bestScore = -Infinity;
+
+    // Shuffle moves slightly to prevent deterministic opening paths
+    const shuffledMoves = [...legalMoves].sort(() => Math.random() - 0.5);
+
+    shuffledMoves.forEach(move => {
+      // Simulate move
+      const undoRecord = simMakeMove(move.boardIndex, move.cellIndex, 'O');
+
+      // Calculate minimax value
+      const score = minimax(depth - 1, -Infinity, Infinity, false);
+
+      // Revert move
+      simUnmakeMove(undoRecord);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = move;
+      }
+    });
+
+    return bestMove || legalMoves[0];
+  }
+
+  // State mutation simulation (make/unmake move) to avoid object allocations
+  function simMakeMove(boardIdx, cellIdx, player) {
+    const prevBoardCell = board[boardIdx][cellIdx];
+    const prevMiniWon = miniBoardsWon[boardIdx];
+    const prevActiveIdx = activeBoardIndex;
+
+    board[boardIdx][cellIdx] = player;
+
+    let wonMiniState = '';
+    if (check3x3Win(board[boardIdx], player)) {
+      wonMiniState = player;
+      miniBoardsWon[boardIdx] = player;
+    } else if (isMiniBoardFull(board[boardIdx])) {
+      wonMiniState = 'tie';
+      miniBoardsWon[boardIdx] = 'tie';
+    }
+
+    // Determine next active board index
+    if (miniBoardsWon[cellIdx] !== '' || isMiniBoardFull(board[cellIdx])) {
+      activeBoardIndex = -1;
+    } else {
+      activeBoardIndex = cellIdx;
+    }
+
+    return {
+      boardIdx,
+      cellIdx,
+      prevBoardCell,
+      prevMiniWon,
+      prevActiveIdx,
+      wonMiniState
+    };
+  }
+
+  function simUnmakeMove(undoRecord) {
+    const { boardIdx, cellIdx, prevBoardCell, prevMiniWon, prevActiveIdx } = undoRecord;
+    board[boardIdx][cellIdx] = prevBoardCell;
+    miniBoardsWon[boardIdx] = prevMiniWon;
+    activeBoardIndex = prevActiveIdx;
+  }
+
+  function minimax(depth, alpha, beta, isMaximizing) {
+    // 1. Terminal cases: game wins
+    if (check3x3Win(miniBoardsWon, 'O')) return 100000 + depth;
+    if (check3x3Win(miniBoardsWon, 'X')) return -100000 - depth;
+
+    if (depth === 0) {
+      return evaluateState();
+    }
+
+    // 2. Collect legal moves
+    const moves = [];
+    if (activeBoardIndex !== -1) {
+      const b = activeBoardIndex;
+      for (let c = 0; c < 9; c++) {
+        if (board[b][c] === '') {
+          moves.push({ boardIndex: b, cellIndex: c });
+        }
+      }
+    } else {
+      for (let b = 0; b < 9; b++) {
+        if (miniBoardsWon[b] === '' && !isMiniBoardFull(board[b])) {
+          for (let c = 0; c < 9; c++) {
+            if (board[b][c] === '') {
+              moves.push({ boardIndex: b, cellIndex: c });
+            }
+          }
+        }
+      }
+    }
+
+    if (moves.length === 0) return 0; // Draw
+
+    if (isMaximizing) {
+      let maxEval = -Infinity;
+      for (let i = 0; i < moves.length; i++) {
+        const move = moves[i];
+        const undoRecord = simMakeMove(move.boardIndex, move.cellIndex, 'O');
+
+        const evaluation = minimax(depth - 1, alpha, beta, false);
+
+        simUnmakeMove(undoRecord);
+
+        maxEval = Math.max(maxEval, evaluation);
+        alpha = Math.max(alpha, evaluation);
+        if (beta <= alpha) break; // Prune
+      }
+      return maxEval;
+    } else {
+      let minEval = Infinity;
+      for (let i = 0; i < moves.length; i++) {
+        const move = moves[i];
+        const undoRecord = simMakeMove(move.boardIndex, move.cellIndex, 'X');
+
+        const evaluation = minimax(depth - 1, alpha, beta, true);
+
+        simUnmakeMove(undoRecord);
+
+        minEval = Math.min(minEval, evaluation);
+        beta = Math.min(beta, evaluation);
+        if (beta <= alpha) break; // Prune
+      }
+      return minEval;
+    }
+  }
+
+  // Heuristic evaluation of the overall board state
+  function evaluateState() {
+    let score = 0;
+
+    // Check large board win
+    if (check3x3Win(miniBoardsWon, 'O')) return 100000;
+    if (check3x3Win(miniBoardsWon, 'X')) return -100000;
+
+    // Positional weights for mini-boards inside large grid
+    const boardWeights = [3, 2, 3, 2, 4, 2, 3, 2, 3];
+    const cellWeights = [3, 2, 3, 2, 4, 2, 3, 2, 3];
+
+    for (let b = 0; b < 9; b++) {
+      if (miniBoardsWon[b] === 'O') {
+        score += boardWeights[b] * 100;
+      } else if (miniBoardsWon[b] === 'X') {
+        score -= boardWeights[b] * 100;
+      } else if (miniBoardsWon[b] === '') {
+        // Evaluate cells inside the active mini-board
+        let miniScore = 0;
+        for (let c = 0; c < 9; c++) {
+          if (board[b][c] === 'O') {
+            miniScore += cellWeights[c] * 2;
+          } else if (board[b][c] === 'X') {
+            miniScore -= cellWeights[c] * 2;
+          }
+        }
+
+        // Check local threats
+        if (checkCloseToWin(board[b], 'O')) {
+          miniScore += 15;
+        }
+        if (checkCloseToWin(board[b], 'X')) {
+          miniScore -= 15;
+        }
+
+        // Scale by large board position weight
+        score += miniScore * boardWeights[b];
+      }
+    }
+
+    // Add score for global won-board 2-in-a-rows (match setup threats)
+    score += countTwoInARows(miniBoardsWon, 'O') * 500;
+    score -= countTwoInARows(miniBoardsWon, 'X') * 500;
+
+    return score;
+  }
+
+  // Count threat lines (2 cells owned, 1 empty) on any 3x3 layout
+  function countTwoInARows(grid3x3, symbol) {
+    let count = 0;
+    WIN_LINES.forEach(line => {
+      let countSymbol = 0;
+      let countEmpty = 0;
+      line.forEach(idx => {
+        if (grid3x3[idx] === symbol) countSymbol++;
+        else if (grid3x3[idx] === '') countEmpty++;
+      });
+      if (countSymbol === 2 && countEmpty === 1) {
+        count++;
+      }
+    });
+    return count;
+  }
+
+  // Checks if playing in cellIndex would create a 2-in-a-row for player
+  function createsTwoInARow(grid3x3, cellIndex, symbol) {
+    // If checking a generic grid (like mini-board) where we want to simulate
+    if (cellIndex !== -1) {
+      grid3x3[cellIndex] = symbol;
+    }
+    
+    let isTwo = WIN_LINES.some(line => {
+      if (cellIndex !== -1 && !line.includes(cellIndex)) return false;
+      let countSymbol = 0;
+      let countEmpty = 0;
+      line.forEach(idx => {
+        if (grid3x3[idx] === symbol) countSymbol++;
+        else if (grid3x3[idx] === '') countEmpty++;
+      });
+      return (countSymbol === 2 && countEmpty === 1);
+    });
+
+    if (cellIndex !== -1) {
+      grid3x3[cellIndex] = '';
+    }
+    return isTwo;
   }
 
   // Helper: Checks if a player has 2-in-a-row in a 3x3 grid and the third cell is empty (immediate threat)
@@ -1120,27 +1264,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       return (countSymbol === 2 && countEmpty === 1);
     });
-  }
-
-  // Helper: Checks if playing in cellIndex would create a 2-in-a-row for player
-  function createsTwoInARow(grid3x3, cellIndex, symbol) {
-    // Temporarily place
-    grid3x3[cellIndex] = symbol;
-    
-    let isTwo = WIN_LINES.some(line => {
-      if (!line.includes(cellIndex)) return false;
-      let countSymbol = 0;
-      let countEmpty = 0;
-      line.forEach(idx => {
-        if (grid3x3[idx] === symbol) countSymbol++;
-        else if (grid3x3[idx] === '') countEmpty++;
-      });
-      return (countSymbol === 2 && countEmpty === 1);
-    });
-
-    // Revert
-    grid3x3[cellIndex] = '';
-    return isTwo;
   }
 
   // Toggle main menu buttons based on if a game is currently ongoing
