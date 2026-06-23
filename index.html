@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tic Tac x2 - Ultimate Tic Tac Toe with smooth elastic animations, PvP and PvNPC modes with adjustable difficulties.">
+  <title>Tic Tac x2</title>
+  <link rel="icon" type="image/png" href="assets/TTx2_icon.png">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Application JS -->
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Background visual decorations -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- MAIN MENU VIEW -->
+    <section id="main-menu" class="menu-view active">
+      <div class="menu-content">
+        <div class="logo-container">
+          <img src="assets/TTx2_logo.png" alt="Tic Tac x2 Logo" class="game-logo">
+        </div>
+        <p class="game-subtitle">The ultimate strategic tic-tac-toe experience.</p>
+        
+        <div class="menu-card">
+          <!-- Game Mode Selector -->
+          <div class="control-group">
+            <label class="control-label">Select Game Mode</label>
+            <div class="mode-options">
+              <button type="button" id="mode-pvp" class="mode-btn active" data-mode="PvP">
+                <span class="btn-icon">👥</span>
+                <span class="btn-text">Player vs Player</span>
+              </button>
+              <button type="button" id="mode-pve" class="mode-btn" data-mode="PvNPC">
+                <span class="btn-icon">🤖</span>
+                <span class="btn-text">Player vs NPC</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Difficulty Selector (hidden by default, shown for PvNPC) -->
+          <div id="difficulty-selection" class="control-group hidden">
+            <label class="control-label">NPC Difficulty</label>
+            <div class="difficulty-options">
+              <button type="button" class="diff-btn" data-difficulty="easy">
+                <span class="diff-title">Easy</span>
+                <span class="diff-desc">50% blunder rate</span>
+              </button>
+              <button type="button" class="diff-btn active" data-difficulty="expert">
+                <span class="diff-title">Expert</span>
+                <span class="diff-desc">30% blunder rate</span>
+              </button>
+              <button type="button" class="diff-btn" data-difficulty="impossible">
+                <span class="diff-title">Impossible</span>
+                <span class="diff-desc">10% blunder rate</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="menu-actions">
+            <button type="button" id="start-game-btn" class="primary-btn">
+              <span>Start Battle</span>
+              <span class="arrow">→</span>
+            </button>
+            <button type="button" id="continue-game-btn" class="secondary-btn hidden">
+              <span>Continue Game</span>
+            </button>
+            <button type="button" id="open-rules-btn" class="secondary-btn">
+              <span>How to Play</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME BOARD VIEW -->
+    <section id="game-view" class="game-view">
+      <header class="game-header">
+        <button type="button" id="home-btn" class="icon-btn" aria-label="Return to Main Menu">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </button>
+        
+        <div class="scoreboard">
+          <div class="player-panel player-x active" id="panel-x">
+            <span class="player-symbol">X</span>
+            <span class="player-name">Player X</span>
+          </div>
+          <div class="vs-divider">VS</div>
+          <div class="player-panel player-o" id="panel-o">
+            <span class="player-symbol">O</span>
+            <span class="player-name">Player O</span>
+          </div>
+        </div>
+        
+        <div class="settings-bar">
+          <button type="button" id="sound-toggle" class="icon-btn active" aria-label="Toggle Sound Effects">
+            <svg class="sound-on" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <svg class="sound-off hidden" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          </button>
+          <button type="button" id="haptic-toggle" class="icon-btn active" aria-label="Toggle Haptics">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+              <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Turn & Helper Instructions -->
+      <div class="turn-status-container">
+        <div id="status-text" class="status-text">Your turn, Player X! Play in any board.</div>
+      </div>
+
+      <!-- MAIN GAME BOARD -->
+      <div class="board-wrapper">
+        <div id="ultimate-board" class="ultimate-board">
+          <!-- 9 Mini Boards are predefined. -->
+          
+          <!-- Board 0 -->
+          <div class="mini-board" data-board-index="0" id="board-0">
+            <div class="mini-grid">
+              <button class="cell" data-board="0" data-cell="0" aria-label="Board 1, Top Left"></button>
+              <button class="cell" data-board="0" data-cell="1" aria-label="Board 1, Top Middle"></button>
+              <button class="cell" data-board="0" data-cell="2" aria-label="Board 1, Top Right"></button>
+              <button class="cell" data-board="0" data-cell="3" aria-label="Board 1, Middle Left"></button>
+              <button class="cell" data-board="0" data-cell="4" aria-label="Board 1, Center"></button>
+              <button class="cell" data-board="0" data-cell="5" aria-label="Board 1, Middle Right"></button>
+              <button class="cell" data-board="0" data-cell="6" aria-label="Board 1, Bottom Left"></button>
+              <button class="cell" data-board="0" data-cell="7" aria-label="Board 1, Bottom Middle"></button>
+              <button class="cell" data-board="0" data-cell="8" aria-label="Board 1, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+          
+          <!-- Board 1 -->
+          <div class="mini-board" data-board-index="1" id="board-1">
+            <div class="mini-grid">
+              <button class="cell" data-board="1" data-cell="0" aria-label="Board 2, Top Left"></button>
+              <button class="cell" data-board="1" data-cell="1" aria-label="Board 2, Top Middle"></button>
+              <button class="cell" data-board="1" data-cell="2" aria-label="Board 2, Top Right"></button>
+              <button class="cell" data-board="1" data-cell="3" aria-label="Board 2, Middle Left"></button>
+              <button class="cell" data-board="1" data-cell="4" aria-label="Board 2, Center"></button>
+              <button class="cell" data-board="1" data-cell="5" aria-label="Board 2, Middle Right"></button>
+              <button class="cell" data-board="1" data-cell="6" aria-label="Board 2, Bottom Left"></button>
+              <button class="cell" data-board="1" data-cell="7" aria-label="Board 2, Bottom Middle"></button>
+              <button class="cell" data-board="1" data-cell="8" aria-label="Board 2, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+
+          <!-- Board 2 -->
+          <div class="mini-board" data-board-index="2" id="board-2">
+            <div class="mini-grid">
+              <button class="cell" data-board="2" data-cell="0" aria-label="Board 3, Top Left"></button>
+              <button class="cell" data-board="2" data-cell="1" aria-label="Board 3, Top Middle"></button>
+              <button class="cell" data-board="2" data-cell="2" aria-label="Board 3, Top Right"></button>
+              <button class="cell" data-board="2" data-cell="3" aria-label="Board 3, Middle Left"></button>
+              <button class="cell" data-board="2" data-cell="4" aria-label="Board 3, Center"></button>
+              <button class="cell" data-board="2" data-cell="5" aria-label="Board 3, Middle Right"></button>
+              <button class="cell" data-board="2" data-cell="6" aria-label="Board 3, Bottom Left"></button>
+              <button class="cell" data-board="2" data-cell="7" aria-label="Board 3, Bottom Middle"></button>
+              <button class="cell" data-board="2" data-cell="8" aria-label="Board 3, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+
+          <!-- Board 3 -->
+          <div class="mini-board" data-board-index="3" id="board-3">
+            <div class="mini-grid">
+              <button class="cell" data-board="3" data-cell="0" aria-label="Board 4, Top Left"></button>
+              <button class="cell" data-board="3" data-cell="1" aria-label="Board 4, Top Middle"></button>
+              <button class="cell" data-board="3" data-cell="2" aria-label="Board 4, Top Right"></button>
+              <button class="cell" data-board="3" data-cell="3" aria-label="Board 4, Middle Left"></button>
+              <button class="cell" data-board="3" data-cell="4" aria-label="Board 4, Center"></button>
+              <button class="cell" data-board="3" data-cell="5" aria-label="Board 4, Middle Right"></button>
+              <button class="cell" data-board="3" data-cell="6" aria-label="Board 4, Bottom Left"></button>
+              <button class="cell" data-board="3" data-cell="7" aria-label="Board 4, Bottom Middle"></button>
+              <button class="cell" data-board="3" data-cell="8" aria-label="Board 4, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+
+          <!-- Board 4 -->
+          <div class="mini-board" data-board-index="4" id="board-4">
+            <div class="mini-grid">
+              <button class="cell" data-board="4" data-cell="0" aria-label="Board 5, Top Left"></button>
+              <button class="cell" data-board="4" data-cell="1" aria-label="Board 5, Top Middle"></button>
+              <button class="cell" data-board="4" data-cell="2" aria-label="Board 5, Top Right"></button>
+              <button class="cell" data-board="4" data-cell="3" aria-label="Board 5, Middle Left"></button>
+              <button class="cell" data-board="4" data-cell="4" aria-label="Board 5, Center"></button>
+              <button class="cell" data-board="4" data-cell="5" aria-label="Board 5, Middle Right"></button>
+              <button class="cell" data-board="4" data-cell="6" aria-label="Board 5, Bottom Left"></button>
+              <button class="cell" data-board="4" data-cell="7" aria-label="Board 5, Bottom Middle"></button>
+              <button class="cell" data-board="4" data-cell="8" aria-label="Board 5, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+
+          <!-- Board 5 -->
+          <div class="mini-board" data-board-index="5" id="board-5">
+            <div class="mini-grid">
+              <button class="cell" data-board="5" data-cell="0" aria-label="Board 6, Top Left"></button>
+              <button class="cell" data-board="5" data-cell="1" aria-label="Board 6, Top Middle"></button>
+              <button class="cell" data-board="5" data-cell="2" aria-label="Board 6, Top Right"></button>
+              <button class="cell" data-board="5" data-cell="3" aria-label="Board 6, Middle Left"></button>
+              <button class="cell" data-board="5" data-cell="4" aria-label="Board 6, Center"></button>
+              <button class="cell" data-board="5" data-cell="5" aria-label="Board 6, Middle Right"></button>
+              <button class="cell" data-board="5" data-cell="6" aria-label="Board 6, Bottom Left"></button>
+              <button class="cell" data-board="5" data-cell="7" aria-label="Board 6, Bottom Middle"></button>
+              <button class="cell" data-board="5" data-cell="8" aria-label="Board 6, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+
+          <!-- Board 6 -->
+          <div class="mini-board" data-board-index="6" id="board-6">
+            <div class="mini-grid">
+              <button class="cell" data-board="6" data-cell="0" aria-label="Board 7, Top Left"></button>
+              <button class="cell" data-board="6" data-cell="1" aria-label="Board 7, Top Middle"></button>
+              <button class="cell" data-board="6" data-cell="2" aria-label="Board 7, Top Right"></button>
+              <button class="cell" data-board="6" data-cell="3" aria-label="Board 7, Middle Left"></button>
+              <button class="cell" data-board="6" data-cell="4" aria-label="Board 7, Center"></button>
+              <button class="cell" data-board="6" data-cell="5" aria-label="Board 7, Middle Right"></button>
+              <button class="cell" data-board="6" data-cell="6" aria-label="Board 7, Bottom Left"></button>
+              <button class="cell" data-board="6" data-cell="7" aria-label="Board 7, Bottom Middle"></button>
+              <button class="cell" data-board="6" data-cell="8" aria-label="Board 7, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+
+          <!-- Board 7 -->
+          <div class="mini-board" data-board-index="7" id="board-7">
+            <div class="mini-grid">
+              <button class="cell" data-board="7" data-cell="0" aria-label="Board 8, Top Left"></button>
+              <button class="cell" data-board="7" data-cell="1" aria-label="Board 8, Top Middle"></button>
+              <button class="cell" data-board="7" data-cell="2" aria-label="Board 8, Top Right"></button>
+              <button class="cell" data-board="7" data-cell="3" aria-label="Board 8, Middle Left"></button>
+              <button class="cell" data-board="7" data-cell="4" aria-label="Board 8, Center"></button>
+              <button class="cell" data-board="7" data-cell="5" aria-label="Board 8, Middle Right"></button>
+              <button class="cell" data-board="7" data-cell="6" aria-label="Board 8, Bottom Left"></button>
+              <button class="cell" data-board="7" data-cell="7" aria-label="Board 8, Bottom Middle"></button>
+              <button class="cell" data-board="7" data-cell="8" aria-label="Board 8, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+
+          <!-- Board 8 -->
+          <div class="mini-board" data-board-index="8" id="board-8">
+            <div class="mini-grid">
+              <button class="cell" data-board="8" data-cell="0" aria-label="Board 9, Top Left"></button>
+              <button class="cell" data-board="8" data-cell="1" aria-label="Board 9, Top Middle"></button>
+              <button class="cell" data-board="8" data-cell="2" aria-label="Board 9, Top Right"></button>
+              <button class="cell" data-board="8" data-cell="3" aria-label="Board 9, Middle Left"></button>
+              <button class="cell" data-board="8" data-cell="4" aria-label="Board 9, Center"></button>
+              <button class="cell" data-board="8" data-cell="5" aria-label="Board 9, Middle Right"></button>
+              <button class="cell" data-board="8" data-cell="6" aria-label="Board 9, Bottom Left"></button>
+              <button class="cell" data-board="8" data-cell="7" aria-label="Board 9, Bottom Middle"></button>
+              <button class="cell" data-board="8" data-cell="8" aria-label="Board 9, Bottom Right"></button>
+            </div>
+            <div class="board-win-overlay">
+              <span class="win-symbol"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Panel -->
+      <footer class="game-actions">
+        <button type="button" id="undo-btn" class="control-btn disabled" disabled>
+          <span class="icon">↩</span> Undo Move
+        </button>
+        <button type="button" id="reset-btn" class="control-btn">
+          <span class="icon">⟳</span> Restart Game
+        </button>
+      </footer>
+    </section>
+
+    <!-- RULES DRAWER/MODAL -->
+    <div id="rules-modal" class="modal-overlay">
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>Rules of Tic Tac x2</h2>
+          <button type="button" id="close-rules-btn" class="close-btn" aria-label="Close rules">&times;</button>
+        </header>
+        <div class="modal-body scrollable">
+          <p class="rules-lead">Tic Tac x2 (Ultimate Tic Tac Toe) is a deeply strategic game where small moves dictate major choices.</p>
+          
+          <div class="rules-section">
+            <h3>1. The Grid within a Grid</h3>
+            <p>The board consists of a large 3x3 grid. Inside each of the 9 large cells sits a mini 3x3 tic-tac-toe game. Your goal is to win 3 mini-games in a horizontal, vertical, or diagonal row to win the entire match.</p>
+          </div>
+          
+          <div class="rules-section">
+            <h3>2. The Golden Rule of Guidance</h3>
+            <p>You cannot choose which mini-game to play in at will! Wherever your opponent places their mark in their mini-game, they send you to that corresponding position on the large board.</p>
+            <div class="rules-example">
+              <strong>Example:</strong> If Player X places a mark in the <strong>top-right</strong> spot of their current mini-board, Player O's next move <strong>MUST</strong> be placed inside the <strong>top-right</strong> mini-board on the large grid.
+            </div>
+          </div>
+
+          <div class="rules-section">
+            <h3>3. Wildcards</h3>
+            <p>If you are sent to a mini-board that has already been won or is completely full, you get a <strong>Wildcard Move</strong>! This allows you to place your mark in any available space on any active mini-board.</p>
+          </div>
+          
+          <div class="rules-section">
+            <h3>4. Mini-Board Tie</h3>
+            <p>If a mini-board is full and neither player wins it, it is declared a Draw. It cannot be won by either player, but still counts towards full-board targets (though it won't help you get three in a row).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER OVERLAY -->
+    <div id="game-over-modal" class="modal-overlay">
+      <div class="modal-card game-over-card">
+        <div class="victory-glow"></div>
+        <h1 class="victory-title" id="winner-title">Victory!</h1>
+        <p class="victory-subtitle" id="winner-subtitle">Player X has claimed the grid.</p>
+        
+        <!-- Animated Winner Symbol -->
+        <div class="winner-display" id="winner-display-symbol">X</div>
+        
+        <div class="game-over-actions">
+          <button type="button" id="replay-btn" class="primary-btn">Play Again</button>
+          <button type="button" id="menu-btn" class="secondary-btn">Main Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
