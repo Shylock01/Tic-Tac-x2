@@ -443,20 +443,21 @@ button:focus-visible {
 }
 
 .diff-btn.active[data-difficulty="easy"] {
-  background: var(--player-x-color);
-  box-shadow: 4px 4px 0px var(--player-o-color);
+  background: #4700FE !important;
+  box-shadow: 4px 4px 0px #A000FF !important;
+  color: #ffffff !important;
 }
 
 .diff-btn.active[data-difficulty="expert"] {
-  background: #4700FE; /* Saturated Indigo/Blue */
-  box-shadow: 4px 4px 0px #FEFE00; /* Neon Yellow */
-  color: #ffffff;
+  background: #FEFE00 !important;
+  box-shadow: 4px 4px 0px #FE6A00 !important;
+  color: #0f1015 !important;
 }
 
 .diff-btn.active[data-difficulty="impossible"] {
-  background: var(--accent-color); /* #FE004D */
-  box-shadow: 4px 4px 0px #ffffff;
-  color: #ffffff;
+  background: #FE004D !important;
+  box-shadow: 4px 4px 0px #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* ==========================================================================
@@ -530,6 +531,39 @@ button:focus-visible {
   background: rgba(71, 0, 254, 0.25) !important;
 }
 
+.impossible-mode .mode-btn.active {
+  background: #FE004D !important;
+  color: #ffffff !important;
+  box-shadow: 4px 4px 0px #ffffff !important;
+}
+
+.impossible-mode .mode-btn:hover,
+.impossible-mode .mode-btn.active:hover {
+  box-shadow: 7px 7px 0px #FE004D !important;
+}
+
+.impossible-mode .diff-btn:not(.active):hover {
+  box-shadow: 4px 4px 0px #FE004D !important;
+}
+
+.impossible-mode .control-btn:hover:not(.disabled) {
+  box-shadow: 7px 7px 0px #FE004D !important;
+}
+
+.impossible-mode .icon-btn:hover {
+  color: #FE004D !important;
+  box-shadow: 7px 7px 0px #FE004D !important;
+}
+
+.impossible-mode .icon-btn.active {
+  color: #FE004D !important;
+  box-shadow: 4px 4px 0px #FE004D !important;
+}
+
+.impossible-mode .close-btn:hover {
+  color: #FE004D !important;
+}
+
 /* ==========================================================================
    EASY MODE THEME OVERRIDES
    ========================================================================== */
@@ -584,6 +618,39 @@ button:focus-visible {
   color: #ffffff !important;
 }
 
+.easy-mode .mode-btn.active {
+  background: #4700FE !important;
+  color: #ffffff !important;
+  box-shadow: 4px 4px 0px #A000FF !important;
+}
+
+.easy-mode .mode-btn:hover,
+.easy-mode .mode-btn.active:hover {
+  box-shadow: 7px 7px 0px #A000FF !important;
+}
+
+.easy-mode .diff-btn:not(.active):hover {
+  box-shadow: 4px 4px 0px #A000FF !important;
+}
+
+.easy-mode .control-btn:hover:not(.disabled) {
+  box-shadow: 7px 7px 0px #A000FF !important;
+}
+
+.easy-mode .icon-btn:hover {
+  color: #A000FF !important;
+  box-shadow: 7px 7px 0px #A000FF !important;
+}
+
+.easy-mode .icon-btn.active {
+  color: #4700FE !important;
+  box-shadow: 4px 4px 0px #A000FF !important;
+}
+
+.easy-mode .close-btn:hover {
+  color: #A000FF !important;
+}
+
 /* ==========================================================================
    EXPERT MODE THEME OVERRIDES
    ========================================================================== */
@@ -630,6 +697,39 @@ button:focus-visible {
 .expert-mode .bg-glow-2 {
   background: linear-gradient(90deg, transparent, #FE6A00, transparent) !important;
   opacity: 0.08 !important;
+}
+
+.expert-mode .mode-btn.active {
+  background: #FEFE00 !important;
+  color: #0f1015 !important;
+  box-shadow: 4px 4px 0px #FE6A00 !important;
+}
+
+.expert-mode .mode-btn:hover,
+.expert-mode .mode-btn.active:hover {
+  box-shadow: 7px 7px 0px #FE6A00 !important;
+}
+
+.expert-mode .diff-btn:not(.active):hover {
+  box-shadow: 4px 4px 0px #FE6A00 !important;
+}
+
+.expert-mode .control-btn:hover:not(.disabled) {
+  box-shadow: 7px 7px 0px #FE6A00 !important;
+}
+
+.expert-mode .icon-btn:hover {
+  color: #FE6A00 !important;
+  box-shadow: 7px 7px 0px #FE6A00 !important;
+}
+
+.expert-mode .icon-btn.active {
+  color: #FEFE00 !important;
+  box-shadow: 4px 4px 0px #FE6A00 !important;
+}
+
+.expert-mode .close-btn:hover {
+  color: #FE6A00 !important;
 }
 
 /* Button variants */

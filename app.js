@@ -389,9 +389,17 @@ document.addEventListener('DOMContentLoaded', () => {
     playSynthSound('click');
     triggerHaptic('tap');
     gameMode = 'PvNPC';
+    npcDifficulty = 'easy';
     pveBtn.classList.add('active');
     pvpBtn.classList.remove('active');
     diffSelection.classList.remove('hidden');
+    diffBtns.forEach(b => {
+      if (b.getAttribute('data-difficulty') === 'easy') {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
     syncDifficultyTheme();
   });
 
