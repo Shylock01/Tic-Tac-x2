@@ -382,6 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pveBtn.classList.remove('active');
     diffSelection.classList.add('hidden');
     syncDifficultyTheme();
+    saveGameState();
   });
 
   pveBtn.addEventListener('click', () => {
@@ -401,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     syncDifficultyTheme();
+    saveGameState();
   });
 
   // Difficulty Toggle
@@ -413,6 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('active');
       npcDifficulty = btn.getAttribute('data-difficulty');
       syncDifficultyTheme();
+      saveGameState();
     });
   });
 
@@ -569,6 +572,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const defaultCell = document.querySelector('.cell[data-board="4"][data-cell="4"]');
       if (defaultCell) defaultCell.focus();
     }, 100);
+
+    saveGameState();
   }
 
   // --- CORE GAME PLAY MECHANICS ---
