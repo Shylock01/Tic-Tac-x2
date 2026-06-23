@@ -1217,7 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (canvas) {
     const ctx = canvas.getContext('2d');
     let particles = [];
-    const maxParticles = 65; // Overcrowded look
+    const maxParticles = 200; // 3x density for overcrowded pattern
 
     function resizeCanvas() {
       canvas.width = window.innerWidth;
@@ -1236,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: 15 + Math.random() * 85,
+        size: 20 + Math.random() * 80, // slightly larger/chunkier sizes
         type: Math.random() < 0.5 ? 'X' : 'O',
         opacity: initOpacity,
         fadeDelay: 60 + Math.random() * 120, // Frames to stay visible before fading
@@ -1254,17 +1254,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function animateBackground() {
-      // Draw dynamic vertical background gradient
+      // Draw dynamic background gradient (from dark crimson to deep charcoal)
       const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      grad.addColorStop(0, '#0f1015');
-      grad.addColorStop(1, '#14151e');
+      grad.addColorStop(0, '#28000b'); // Darkish #FE004D
+      grad.addColorStop(1, '#0f1015'); // Current dark gray
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Spawn new particles if we have space
-      if (particles.length < maxParticles && Math.random() < 0.12) {
+      // Spawn new particles if we have space (faster spawn rate)
+      if (particles.length < maxParticles && Math.random() < 0.3) {
         particles.push(createParticle(0.5));
       }
+
+      // Check if main menu is currently active to use Kidmon font
+      const isMenu = mainMenuView && mainMenuView.classList.contains('active');
 
       // Draw and update particles
       particles.forEach((p) => {
@@ -1298,27 +1301,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (p.opacity > 0.001) {
           ctx.save();
           ctx.translate(p.x + sx, p.y + sy);
-          ctx.lineWidth = p.size * 0.12;
-          ctx.lineCap = 'square';
-          ctx.lineJoin = 'miter';
+          ctx.rotate(p.rotation);
 
-          if (p.type === 'X') {
-            // Draw White X at 50% max opacity
-            ctx.rotate(p.rotation);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${p.opacity})`;
-            ctx.beginPath();
-            const offset = p.size / 2;
-            ctx.moveTo(-offset, -offset);
-            ctx.lineTo(offset, offset);
-            ctx.moveTo(offset, -offset);
-            ctx.lineTo(-offset, offset);
-            ctx.stroke();
+          if (isMenu) {
+            // Draw using Kidmon Demo font in the main menu
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `900 ${p.size}px 'Kidmon Demo', sans-serif`;
+            
+            if (p.type === 'X') {
+              ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+              ctx.fillText('X', 0, 0);
+            } else {
+              ctx.fillStyle = `rgba(122, 125, 147, ${p.opacity})`;
+              ctx.fillText('O', 0, 0);
+            }
           } else {
-            // Draw Gray O (#7a7d93 / rgb(122, 125, 147)) at 50% max opacity
-            ctx.strokeStyle = `rgba(122, 125, 147, ${p.opacity})`;
-            ctx.beginPath();
-            ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-            ctx.stroke();
+            // Draw standard thick geometric shapes during active game view
+            ctx.lineWidth = p.size * 0.35; // A lot thicker!
+            ctx.lineCap = 'square';
+            ctx.lineJoin = 'miter';
+
+            if (p.type === 'X') {
+              ctx.strokeStyle = `rgba(255, 255, 255, ${p.opacity})`;
+              ctx.beginPath();
+              const offset = p.size / 2;
+              ctx.moveTo(-offset, -offset);
+              ctx.lineTo(offset, offset);
+              ctx.moveTo(offset, -offset);
+              ctx.lineTo(-offset, offset);
+              ctx.stroke();
+            } else {
+              ctx.strokeStyle = `rgba(122, 125, 147, ${p.opacity})`;
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+              ctx.stroke();
+            }
           }
           ctx.restore();
         }

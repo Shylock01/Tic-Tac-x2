@@ -1,3 +1,9 @@
+/* Font Declarations */
+@font-face {
+  font-family: 'Kidmon Demo';
+  src: url('assets/Kidmon Demo.otf') format('opentype');
+}
+
 /* Design Tokens & Theme Setup */
 :root {
   /* Gritty action colors */
@@ -147,8 +153,8 @@ button:focus-visible {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 160%;
-  height: 160%;
+  width: 135%; /* Made 10% smaller */
+  height: 135%;
   transform: translate(-50%, -50%) scale(0);
   opacity: 0;
   pointer-events: none;
@@ -197,6 +203,8 @@ button:focus-visible {
   text-transform: uppercase;
   letter-spacing: 2px;
   text-shadow: 2px 2px 0px #000000;
+  position: relative;
+  z-index: 5; /* Ensure splatter graphic stays behind text assets */
 }
 
 .menu-card {
@@ -208,6 +216,8 @@ button:focus-visible {
   flex-direction: column;
   gap: 1.8rem;
   transform: skewX(-2deg);
+  position: relative;
+  z-index: 5; /* Ensure splatter graphic stays behind card assets */
 }
 
 .control-group {
@@ -721,17 +731,46 @@ button:focus-visible {
   background: rgba(254, 0, 77, 0.04);
   border: 3px solid var(--accent-color);
   box-shadow: 0 0 10px var(--accent-glow);
-  animation: jitter-pulse 1.2s infinite ease-in-out;
+  animation: jitter-pulse 2.5s infinite ease-in-out;
 }
 
+/* Stays still for 1.5s, then jitters and flashes white briefly, then settles back */
 @keyframes jitter-pulse {
-  0%, 100% { border-color: var(--accent-color); box-shadow: 0 0 6px var(--accent-glow); transform: scale(1); }
-  15% { border-color: #ffffff; box-shadow: 0 0 10px rgba(255,255,255,0.4); transform: scale(1.008) translate(0.5px, -0.5px); }
-  30% { border-color: var(--accent-color); box-shadow: 0 0 4px var(--accent-glow); transform: scale(0.992) translate(-0.5px, 0.5px); }
-  45% { border-color: var(--accent-color); box-shadow: 0 0 8px var(--accent-glow); transform: scale(1) translate(0.5px, 0.5px); }
-  60% { border-color: #ffffff; box-shadow: 0 0 12px rgba(255,255,255,0.5); transform: scale(1.012) translate(-0.5px, -0.5px); }
-  75% { border-color: var(--accent-color); box-shadow: 0 0 5px var(--accent-glow); transform: scale(0.996) translate(0px, 0px); }
-  90% { border-color: var(--accent-color); box-shadow: 0 0 9px var(--accent-glow); transform: scale(1.004) translate(0.5px, 0.5px); }
+  0%, 60% {
+    transform: scale(1) translate(0, 0);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+  65% {
+    transform: scale(1.008) translate(0.5px, -0.5px);
+    border-color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  70% {
+    transform: scale(0.992) translate(-0.5px, 0.5px);
+    border-color: #ffffff;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+  }
+  75% {
+    transform: scale(1.012) translate(0.5px, 0.5px);
+    border-color: #ffffff;
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.7);
+  }
+  80% {
+    transform: scale(0.996) translate(-0.5px, -0.5px);
+    border-color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  85% {
+    transform: scale(1.004) translate(0px, 0px);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  90%, 100% {
+    transform: scale(1) translate(0, 0);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
 }
 
 /* Dim other boards when there is an active target */
