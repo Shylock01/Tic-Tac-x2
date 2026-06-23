@@ -88,42 +88,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function playSynthSound(type) {
     if (!soundEnabled) return;
     try {
-      initAudio();
-      const now = audioCtx.currentTime;
-      
       switch (type) {
         case 'click': {
-          // Play a short, subtle UI click
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(400, now);
-          osc.frequency.exponentialRampToValueAtTime(150, now + 0.08);
-          gain.gain.setValueAtTime(0.05, now);
-          gain.gain.linearRampToValueAtTime(0.001, now + 0.08);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.08);
+          playAudioFile('audio/Button_1.mp3');
           break;
         }
         case 'place': {
-          // Play a sharp, elastic move placement sound
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(250, now);
-          osc.frequency.exponentialRampToValueAtTime(600, now + 0.12);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.linearRampToValueAtTime(0.001, now + 0.12);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.12);
+          playAudioFile('audio/Place_Piece.mp3');
           break;
         }
         case 'board-win': {
-          // Play a quick ascending major triad arpeggio
+          // Play a quick ascending major triad arpeggio (synthesis sound remains for distinct mini-board win feel)
+          initAudio();
+          const now = audioCtx.currentTime;
           const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
           notes.forEach((freq, index) => {
             const osc = audioCtx.createOscillator();
@@ -140,72 +117,23 @@ document.addEventListener('DOMContentLoaded', () => {
           break;
         }
         case 'victory': {
-          // Play a triumphant arpeggio and chord
-          const chords = [
-            [523.25, 659.25, 783.99], // C Major
-            [587.33, 739.99, 880.00], // D Major
-            [659.25, 830.61, 987.77]  // E Major
-          ];
-          chords.forEach((chord, chordIdx) => {
-            chord.forEach((freq) => {
-              const osc = audioCtx.createOscillator();
-              const gain = audioCtx.createGain();
-              osc.type = 'triangle';
-              osc.frequency.setValueAtTime(freq, now + chordIdx * 0.15);
-              gain.gain.setValueAtTime(0.04, now + chordIdx * 0.15);
-              gain.gain.linearRampToValueAtTime(0.001, now + chordIdx * 0.15 + 0.4);
-              osc.connect(gain);
-              gain.connect(audioCtx.destination);
-              osc.start(now + chordIdx * 0.15);
-              osc.stop(now + chordIdx * 0.15 + 0.4);
-            });
-          });
+          playAudioFile('audio/Victory_Voice.mp3');
+          playAudioFile('audio/Victory_Music.mp3');
           break;
         }
         case 'defeat': {
-          // Play a sad descending slide
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(300, now);
-          osc.frequency.linearRampToValueAtTime(100, now + 0.6);
-          gain.gain.setValueAtTime(0.06, now);
-          gain.gain.linearRampToValueAtTime(0.001, now + 0.6);
-          
-          // Filter to soften the sawtooth
-          const filter = audioCtx.createBiquadFilter();
-          filter.type = 'lowpass';
-          filter.frequency.value = 600;
-
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.6);
+          playAudioFile('audio/You_Lose_Voice.mp3');
+          playAudioFile('audio/You_Lose_Music.mp3');
           break;
         }
         case 'error': {
-          // Play a short, low pitch warning buzz
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(110, now);
-          gain.gain.setValueAtTime(0.06, now);
-          gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
-          
-          const filter = audioCtx.createBiquadFilter();
-          filter.type = 'lowpass';
-          filter.frequency.value = 220;
-
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.15);
+          playAudioFile('audio/Error_No.mp3');
           break;
         }
         case 'reset': {
-          // Play a sweeping synthesizer swoosh
+          // Play sweeping synthesizer swoosh (synthesis remains for distinct reset sweep)
+          initAudio();
+          const now = audioCtx.currentTime;
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
@@ -220,63 +148,23 @@ document.addEventListener('DOMContentLoaded', () => {
           break;
         }
         case 'logo-impact': {
-          // Smash Bros style KO swing + impact sound
-          // 1. Swing/Swoosh (frequency sweep + triangle wave)
-          const osc1 = audioCtx.createOscillator();
-          const gain1 = audioCtx.createGain();
-          osc1.type = 'triangle';
-          osc1.frequency.setValueAtTime(100, now);
-          osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.18);
-          gain1.gain.setValueAtTime(0.01, now);
-          gain1.gain.linearRampToValueAtTime(0.2, now + 0.15);
-          gain1.gain.linearRampToValueAtTime(0.001, now + 0.2);
-          
-          osc1.connect(gain1);
-          gain1.connect(audioCtx.destination);
-          osc1.start(now);
-          osc1.stop(now + 0.2);
-
-          // 2. High-Impact Explosion (sawtooth wave at 0.15s)
-          const oscClash = audioCtx.createOscillator();
-          const gainClash = audioCtx.createGain();
-          oscClash.type = 'sawtooth';
-          oscClash.frequency.setValueAtTime(180, now + 0.15);
-          oscClash.frequency.linearRampToValueAtTime(40, now + 0.5);
-          
-          const filter = audioCtx.createBiquadFilter();
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(1000, now + 0.15);
-          filter.frequency.exponentialRampToValueAtTime(100, now + 0.5);
-          
-          gainClash.gain.setValueAtTime(0.001, now);
-          gainClash.gain.setValueAtTime(0.3, now + 0.15);
-          gainClash.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-
-          oscClash.connect(filter);
-          filter.connect(gainClash);
-          gainClash.connect(audioCtx.destination);
-          oscClash.start(now + 0.15);
-          oscClash.stop(now + 0.6);
-
-          // 3. High-pitch chime clash
-          const oscChime = audioCtx.createOscillator();
-          const gainChime = audioCtx.createGain();
-          oscChime.type = 'sine';
-          oscChime.frequency.setValueAtTime(2000, now + 0.15);
-          oscChime.frequency.exponentialRampToValueAtTime(1500, now + 0.4);
-          gainChime.gain.setValueAtTime(0.001, now);
-          gainChime.gain.setValueAtTime(0.1, now + 0.15);
-          gainChime.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-          
-          oscChime.connect(gainChime);
-          gainChime.connect(audioCtx.destination);
-          oscChime.start(now + 0.15);
-          oscChime.stop(now + 0.45);
+          playAudioFile('audio/MenuStart_1.mp3');
+          playAudioFile('audio/MenuStart_2.mp3');
           break;
         }
       }
     } catch (e) {
       console.warn('Audio play failed:', e);
+    }
+  }
+
+  function playAudioFile(filePath) {
+    if (!soundEnabled) return;
+    try {
+      const audio = new Audio(filePath);
+      audio.play().catch(err => console.warn(`Audio play failed for ${filePath}:`, err));
+    } catch (e) {
+      console.warn(`Audio load failed for ${filePath}:`, e);
     }
   }
 
@@ -945,90 +833,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const roll = Math.random();
 
     if (npcDifficulty === 'easy') {
-      // Easy Mode: 40% random blunder
-      if (roll < 0.40) {
+      // Easy Mode: 30% blunder rate, 2-ply Minimax lookahead
+      if (roll < 0.30) {
         const randomIdx = Math.floor(Math.random() * legalMoves.length);
         chosenMove = legalMoves[randomIdx];
       } else {
-        // Otherwise, evaluates active board only (1-ply heuristic)
-        chosenMove = findBestNpcMoveEasy(legalMoves);
+        chosenMove = findBestNpcMoveMinimax(legalMoves, 2);
       }
     } else if (npcDifficulty === 'expert') {
-      // Expert Mode: 15% blunder
+      // Expert Mode: 15% blunder rate, 3-ply Minimax lookahead
       if (roll < 0.15) {
         const randomIdx = Math.floor(Math.random() * legalMoves.length);
         chosenMove = legalMoves[randomIdx];
       } else {
-        // Depth 2 minimax lookahead
-        chosenMove = findBestNpcMoveMinimax(legalMoves, 2);
+        chosenMove = findBestNpcMoveMinimax(legalMoves, 3);
       }
     } else if (npcDifficulty === 'impossible') {
-      // Impossible Mode: 0% blunder, minimax search depth 5 (depth 3 on wildcards for speed)
-      const depth = (activeBoardIndex === -1) ? 3 : 5;
-      chosenMove = findBestNpcMoveMinimax(legalMoves, depth);
+      // Impossible Mode: 5% blunder rate, 4-ply Minimax lookahead (capped at 3 on wildcard turns for safety)
+      if (roll < 0.05) {
+        const randomIdx = Math.floor(Math.random() * legalMoves.length);
+        chosenMove = legalMoves[randomIdx];
+      } else {
+        const depth = (activeBoardIndex === -1) ? 3 : 4;
+        chosenMove = findBestNpcMoveMinimax(legalMoves, depth);
+      }
     }
 
     if (chosenMove) {
       makeMove(chosenMove.boardIndex, chosenMove.cellIndex);
     }
-  }
-
-  // --- EASY MODE STRATEGY ---
-  function findBestNpcMoveEasy(legalMoves) {
-    let bestMove = null;
-    let bestScore = -Infinity;
-
-    legalMoves.forEach(move => {
-      const score = evaluateNpcMoveEasy(move.boardIndex, move.cellIndex);
-      if (score > bestScore) {
-        bestScore = score;
-        bestMove = move;
-      }
-    });
-
-    return bestMove || legalMoves[0];
-  }
-
-  function evaluateNpcMoveEasy(boardIndex, cellIndex) {
-    let score = 0;
-
-    // Simulate win on this mini-board
-    board[boardIndex][cellIndex] = 'O';
-    const wonMini = check3x3Win(board[boardIndex], 'O');
-    board[boardIndex][cellIndex] = '';
-
-    if (wonMini) score += 1000;
-
-    // Simulate opponent block on this mini-board
-    board[boardIndex][cellIndex] = 'X';
-    const blockedMini = check3x3Win(board[boardIndex], 'X');
-    board[boardIndex][cellIndex] = '';
-
-    if (blockedMini) score += 500;
-
-    // Set up a 2-in-a-row inside this mini-board
-    if (createsTwoInARow(board[boardIndex], cellIndex, 'O')) {
-      score += 100;
-    }
-
-    // Block opponent's 2-in-a-row setups inside this mini-board
-    if (createsTwoInARow(board[boardIndex], cellIndex, 'X')) {
-      score += 50;
-    }
-
-    // Prefer center/corners in the mini-board
-    if (cellIndex === 4) {
-      score += 15;
-    } else if ([0, 2, 6, 8].includes(cellIndex)) {
-      score += 8;
-    } else {
-      score += 2;
-    }
-
-    // Add noise for variation
-    score += Math.random() * 5;
-
-    return score;
   }
 
   // --- EXPERT & IMPOSSIBLE MINIMAX STRATEGY ---

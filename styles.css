@@ -574,7 +574,7 @@ button:focus-visible {
 
 .easy-mode .game-subtitle {
   color: #4700FE !important;
-  text-shadow: 2px 2px 0px #A000FF !important;
+  text-shadow: 2px 2px 0px #000000 !important;
 }
 
 .easy-mode .game-logo {
@@ -730,6 +730,10 @@ button:focus-visible {
 
 .expert-mode .close-btn:hover {
   color: #FE6A00 !important;
+}
+
+.expert-mode .target-badge {
+  color: #0f1015 !important;
 }
 
 /* Button variants */
