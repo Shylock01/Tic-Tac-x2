@@ -10,6 +10,7 @@
   --player-x-color: #FEFE00; /* Neon Yellow */
   --player-o-color: #4700FE; /* Indigo/Blue */
   --accent-color: #FE004D;   /* Hot Magenta/Red */
+  --accent-glow: rgba(254, 0, 77, 0.4);
   
   --bg-color: #0f1015;       /* Deep Charcoal */
   --card-bg: #14151e;        /* Dark Grey */
@@ -519,12 +520,116 @@ button:focus-visible {
   box-shadow: 0 0 15px rgba(254, 0, 77, 0.6) !important;
 }
 
-.impossible-mode.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover {
+.impossible-mode.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover,
+.impossible-mode.turn-x .mini-board.active-play .cell:not(.x):not(.o):focus-visible {
   background: rgba(254, 254, 0, 0.25) !important;
 }
 
-.impossible-mode.turn-o .mini-board.active-play .cell:not(.x):not(.o):hover {
+.impossible-mode.turn-o .mini-board.active-play .cell:not(.x):not(.o):hover,
+.impossible-mode.turn-o .mini-board.active-play .cell:not(.x):not(.o):focus-visible {
   background: rgba(71, 0, 254, 0.25) !important;
+}
+
+/* ==========================================================================
+   EASY MODE THEME OVERRIDES
+   ========================================================================== */
+.easy-mode {
+  --accent-color: #4700FE; /* Indigo/Blue is the main color */
+  --accent-glow: rgba(71, 0, 254, 0.4);
+}
+
+.easy-mode .game-subtitle {
+  color: #4700FE !important;
+  text-shadow: 2px 2px 0px #A000FF !important;
+}
+
+.easy-mode .game-logo {
+  filter: drop-shadow(5px 5px 0px #A000FF);
+}
+
+.easy-mode .primary-btn {
+  background: var(--accent-color) !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  box-shadow: 6px 6px 0px #A000FF !important;
+}
+
+.easy-mode .primary-btn:hover {
+  box-shadow: 10px 10px 0px #A000FF !important;
+}
+
+.easy-mode .secondary-btn:hover {
+  box-shadow: 7px 7px 0px #A000FF !important;
+}
+
+.easy-mode .mini-board.active-play {
+  background: rgba(71, 0, 254, 0.04);
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 10px rgba(160, 0, 255, 0.5) !important;
+}
+
+.easy-mode .bg-glow-1 {
+  background: linear-gradient(90deg, transparent, #4700FE, transparent) !important;
+  opacity: 0.12 !important;
+}
+
+.easy-mode .bg-glow-2 {
+  background: linear-gradient(90deg, transparent, #A000FF, transparent) !important;
+  opacity: 0.08 !important;
+}
+
+.easy-mode .diff-btn.active[data-difficulty="easy"] {
+  background: #4700FE !important;
+  box-shadow: 4px 4px 0px #A000FF !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   EXPERT MODE THEME OVERRIDES
+   ========================================================================== */
+.expert-mode {
+  --accent-color: #FEFE00; /* Neon yellow is the main color */
+  --accent-glow: rgba(254, 254, 0, 0.4);
+}
+
+.expert-mode .game-subtitle {
+  color: #FEFE00 !important;
+  text-shadow: 2px 2px 0px #0f1015 !important;
+}
+
+.expert-mode .game-logo {
+  filter: drop-shadow(5px 5px 0px #FE6A00);
+}
+
+.expert-mode .primary-btn {
+  background: var(--accent-color) !important;
+  border-color: #0f1015 !important;
+  color: #0f1015 !important; /* Black text for yellow primary readability */
+  box-shadow: 6px 6px 0px #FE6A00 !important;
+}
+
+.expert-mode .primary-btn:hover {
+  box-shadow: 10px 10px 0px #FE6A00 !important;
+}
+
+.expert-mode .secondary-btn:hover {
+  box-shadow: 7px 7px 0px #FE6A00 !important;
+}
+
+.expert-mode .mini-board.active-play {
+  background: rgba(254, 254, 0, 0.04);
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 10px rgba(254, 106, 0, 0.5) !important;
+}
+
+.expert-mode .bg-glow-1 {
+  background: linear-gradient(90deg, transparent, #FEFE00, transparent) !important;
+  opacity: 0.12 !important;
+}
+
+.expert-mode .bg-glow-2 {
+  background: linear-gradient(90deg, transparent, #FE6A00, transparent) !important;
+  opacity: 0.08 !important;
 }
 
 /* Button variants */
@@ -963,7 +1068,7 @@ button:focus-visible {
 }
 
 .cell:focus-visible {
-  outline: 3px solid var(--player-x-color);
+  outline: 3px solid var(--accent-color) !important;
   outline-offset: -3px;
 }
 
@@ -1026,9 +1131,11 @@ button:focus-visible {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Hover previews */
+/* Hover & focus-visible previews */
 .app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover::before,
-.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover::after {
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover::after,
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):focus-visible::before,
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):focus-visible::after {
   content: '';
   position: absolute;
   width: 8%;
@@ -1036,10 +1143,13 @@ button:focus-visible {
   background-color: #ffffff;
   opacity: 1;
 }
-.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover::before { transform: rotate(45deg); }
-.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover::after { transform: rotate(-45deg); }
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover::before,
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):focus-visible::before { transform: rotate(45deg); }
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover::after,
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):focus-visible::after { transform: rotate(-45deg); }
 
-.app-container.turn-o .mini-board.active-play .cell:not(.x):not(.o):hover::before {
+.app-container.turn-o .mini-board.active-play .cell:not(.x):not(.o):hover::before,
+.app-container.turn-o .mini-board.active-play .cell:not(.x):not(.o):focus-visible::before {
   content: '';
   position: absolute;
   width: 38%;
@@ -1049,12 +1159,18 @@ button:focus-visible {
   opacity: 1;
 }
 
-.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover {
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):hover,
+.app-container.turn-x .mini-board.active-play .cell:not(.x):not(.o):focus-visible {
   background-color: rgba(254, 254, 0, 0.25);
+  outline: 3px solid var(--accent-color) !important;
+  outline-offset: -3px;
 }
 
-.app-container.turn-o .mini-board.active-play .cell:not(.x):not(.o):hover {
+.app-container.turn-o .mini-board.active-play .cell:not(.x):not(.o):hover,
+.app-container.turn-o .mini-board.active-play .cell:not(.x):not(.o):focus-visible {
   background-color: rgba(71, 0, 254, 0.25);
+  outline: 3px solid var(--accent-color) !important;
+  outline-offset: -3px;
 }
 
 

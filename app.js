@@ -357,11 +357,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 150);
   }
 
-  function syncImpossibleMode() {
-    if (gameMode === 'PvNPC' && npcDifficulty === 'impossible') {
-      appContainer.classList.add('impossible-mode');
-    } else {
-      appContainer.classList.remove('impossible-mode');
+  function syncDifficultyTheme() {
+    appContainer.classList.remove('easy-mode', 'expert-mode', 'impossible-mode');
+    if (gameMode === 'PvNPC') {
+      if (npcDifficulty === 'easy') {
+        appContainer.classList.add('easy-mode');
+      } else if (npcDifficulty === 'expert') {
+        appContainer.classList.add('expert-mode');
+      } else if (npcDifficulty === 'impossible') {
+        appContainer.classList.add('impossible-mode');
+      }
     }
   }
 
@@ -376,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pvpBtn.classList.add('active');
     pveBtn.classList.remove('active');
     diffSelection.classList.add('hidden');
-    syncImpossibleMode();
+    syncDifficultyTheme();
   });
 
   pveBtn.addEventListener('click', () => {
@@ -387,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pveBtn.classList.add('active');
     pvpBtn.classList.remove('active');
     diffSelection.classList.remove('hidden');
-    syncImpossibleMode();
+    syncDifficultyTheme();
   });
 
   // Difficulty Toggle
@@ -399,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
       diffBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       npcDifficulty = btn.getAttribute('data-difficulty');
-      syncImpossibleMode();
+      syncDifficultyTheme();
     });
   });
 
@@ -433,16 +438,21 @@ document.addEventListener('DOMContentLoaded', () => {
     playSynthSound('click');
     triggerHaptic('tap');
     rulesModal.classList.add('active');
+    setTimeout(() => {
+      if (closeRulesBtn) closeRulesBtn.focus();
+    }, 50);
   });
 
   closeRulesBtn.addEventListener('click', () => {
     playSynthSound('click');
     rulesModal.classList.remove('active');
+    if (openRulesBtn) openRulesBtn.focus();
   });
 
   rulesModal.addEventListener('click', (e) => {
     if (e.target === rulesModal) {
       rulesModal.classList.remove('active');
+      if (openRulesBtn) openRulesBtn.focus();
     }
   });
 
@@ -545,6 +555,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateUI();
+
+    // Auto-focus the center cell of the board for keyboard navigation convenience
+    setTimeout(() => {
+      const defaultCell = document.querySelector('.cell[data-board="4"][data-cell="4"]');
+      if (defaultCell) defaultCell.focus();
+    }, 100);
   }
 
   // --- CORE GAME PLAY MECHANICS ---
@@ -1207,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    syncImpossibleMode();
+    syncDifficultyTheme();
 
     updateUI();
   }
@@ -1273,6 +1289,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Check if main menu is currently active to use Kidmon font and colors
       const isMenu = mainMenuView && mainMenuView.classList.contains('active');
       const isImpossible = appContainer && appContainer.classList.contains('impossible-mode');
+      const isEasy = appContainer && appContainer.classList.contains('easy-mode');
+      const isExpert = appContainer && appContainer.classList.contains('expert-mode');
 
       // Draw dynamic background gradient (from dark crimson/blue to deep charcoal)
       const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -1280,6 +1298,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Inverted: pitch black top, intense red/crimson bottom glow
         grad.addColorStop(0, '#000000');
         grad.addColorStop(1, '#3d000f');
+      } else if (isEasy) {
+        // Easy Mode: deep dark violet/blue top
+        grad.addColorStop(0, '#0a0024'); // Darkish #4700FE
+        grad.addColorStop(1, '#0f1015');
+      } else if (isExpert) {
+        // Expert Mode: deep dark olive/yellow top
+        grad.addColorStop(0, '#222000'); // Darkish #FEFE00
+        grad.addColorStop(1, '#0f1015');
       } else if (isMenu) {
         grad.addColorStop(0, '#28000b'); // Darkish #FE004D
         grad.addColorStop(1, '#0f1015'); // Current dark gray
@@ -1338,6 +1364,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (isImpossible) {
             // Highly prominent hot red particles
             ctx.fillStyle = `rgba(254, 0, 77, ${Math.min(0.65, p.opacity * 2.2)})`;
+          } else if (isEasy) {
+            ctx.fillStyle = `rgba(71, 0, 254, ${p.opacity})`; // Indigo/Blue (#4700FE)
+          } else if (isExpert) {
+            ctx.fillStyle = `rgba(254, 254, 0, ${p.opacity})`; // Neon Yellow (#FEFE00)
           } else if (isMenu) {
             ctx.fillStyle = `rgba(254, 0, 77, ${p.opacity})`; // Hot Red (#FE004D)
           } else {
@@ -1357,6 +1387,101 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start loop
     animateBackground();
   }
+
+  // --- KEYBOARD NAVIGATION & ACCESSIBILITY ---
+  document.addEventListener('keydown', (e) => {
+    const isGameActiveView = gameView && gameView.classList.contains('active');
+    
+    // Check if the pressed key is an arrow key or spacebar
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+      // Prevent default page scroll
+      e.preventDefault();
+      
+      if (isGameActiveView) {
+        // --- GAMEPLAY KEYBOARD NAVIGATION ---
+        const activeEl = document.activeElement;
+        const isCell = activeEl && activeEl.classList.contains('cell');
+        
+        let boardIdx = 4; // Default starting board
+        let cellIdx = 4;  // Default starting cell
+        
+        if (isCell) {
+          boardIdx = parseInt(activeEl.dataset.board);
+          cellIdx = parseInt(activeEl.dataset.cell);
+        } else {
+          // If no cell is focused, default to activeBoardIndex if specified, or center
+          if (activeBoardIndex !== -1) {
+            boardIdx = activeBoardIndex;
+          }
+        }
+        
+        if (e.key === ' ') {
+          // Space bar triggers click
+          if (isCell) {
+            activeEl.click();
+          } else {
+            const targetCell = document.querySelector(`.cell[data-board="${boardIdx}"][data-cell="${cellIdx}"]`);
+            if (targetCell) {
+              targetCell.focus();
+              targetCell.click();
+            }
+          }
+        } else {
+          // Arrow keys: move focus in 9x9 layout
+          let r = Math.floor(boardIdx / 3) * 3 + Math.floor(cellIdx / 3);
+          let c = (boardIdx % 3) * 3 + (cellIdx % 3);
+          
+          if (e.key === 'ArrowUp') {
+            r = (r - 1 + 9) % 9;
+          } else if (e.key === 'ArrowDown') {
+            r = (r + 1) % 9;
+          } else if (e.key === 'ArrowLeft') {
+            c = (c - 1 + 9) % 9;
+          } else if (e.key === 'ArrowRight') {
+            c = (c + 1) % 9;
+          }
+          
+          const newBoardIdx = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+          const newCellIdx = (r % 3) * 3 + (c % 3);
+          
+          const targetCell = document.querySelector(`.cell[data-board="${newBoardIdx}"][data-cell="${newCellIdx}"]`);
+          if (targetCell) {
+            targetCell.focus();
+          }
+        }
+      } else {
+        // --- MENU/MODAL KEYBOARD NAVIGATION ---
+        let activeContainer = mainMenuView;
+        if (rulesModal && rulesModal.classList.contains('active')) {
+          activeContainer = rulesModal;
+        } else if (gameOverModal && gameOverModal.classList.contains('active')) {
+          activeContainer = gameOverModal;
+        }
+        
+        const focusableSelectors = 'button:not(.hidden):not([disabled]), [tabindex="0"]';
+        const focusables = Array.from(activeContainer.querySelectorAll(focusableSelectors))
+          .filter(el => el.offsetWidth > 0 && el.offsetHeight > 0);
+          
+        if (focusables.length === 0) return;
+        
+        const activeEl = document.activeElement;
+        let index = focusables.indexOf(activeEl);
+        
+        if (e.key === ' ') {
+          if (activeEl && focusables.includes(activeEl)) {
+            activeEl.click();
+          }
+        } else {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            index = (index + 1) % focusables.length;
+          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            index = (index - 1 + focusables.length) % focusables.length;
+          }
+          focusables[index].focus();
+        }
+      }
+    }
+  });
 
   // Trigger initial logo impact and background drift angle
   setTimeout(triggerLogoImpact, 100);
