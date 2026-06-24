@@ -15,10 +15,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800;900&family=Teko:wght@500;700;900&display=swap" rel="stylesheet">
   
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="styles.css?v=2.1.1">
+  <link rel="stylesheet" href="styles.css?v=2.1.2">
   
   <!-- Application JS -->
-  <script src="app.js?v=2.1.1" defer></script>
+  <script src="app.js?v=2.1.2" defer></script>
 </head>
 <body>
   <!-- Background Canvas -->
@@ -43,6 +43,27 @@
         <p class="game-subtitle">TWICE THE GRID. TWICE THE BATTLE.</p>
         
         <div class="menu-card">
+          <!-- Player Profile Selection -->
+          <div class="control-group">
+            <label class="control-label">PLAYER PROFILE</label>
+            <div class="profile-input-row">
+              <input type="text" id="player-name-input" maxlength="3" placeholder="AAA" class="profile-input" style="text-transform: uppercase;">
+              <button type="button" id="save-profile-btn" class="primary-btn profile-save-btn" aria-label="Save Profile">
+                <span>SAVE</span>
+              </button>
+              <button type="button" id="open-achievements-btn" class="icon-btn achievements-btn" aria-label="View Achievements">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                  <path d="M4 22h16"></path>
+                  <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path>
+                  <path d="M12 2a6 6 0 0 1 6 6v5a6 6 0 0 1-6 6 6 6 6 0 0 1-6-6V8a6 6 0 0 1 6-6z"></path>
+                </svg>
+              </button>
+            </div>
+            <p id="profile-status" class="profile-status-text">Active Profile: NONE</p>
+          </div>
+
           <!-- Game Mode Selector -->
           <div class="control-group">
             <label class="control-label">MODE</label>
@@ -368,6 +389,58 @@
         <div class="game-over-actions">
           <button type="button" id="replay-btn" class="primary-btn">Play Again</button>
           <button type="button" id="menu-btn" class="secondary-btn">Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENTS MODAL -->
+    <div id="achievements-modal" class="modal-overlay">
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>Achievements & Stats</h2>
+          <button type="button" id="close-achievements-btn" class="close-btn" aria-label="Close achievements">&times;</button>
+        </header>
+        <div class="modal-body scrollable">
+          <div class="stats-tracker">
+            <h3>Player Profile: <span id="stats-active-profile" class="profile-highlight">NONE</span></h3>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <span class="stat-val" id="stat-wins">0</span>
+                <span class="stat-label">WINS</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-val" id="stat-losses">0</span>
+                <span class="stat-label">LOSSES</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-val" id="stat-ties">0</span>
+                <span class="stat-label">TIES</span>
+              </div>
+            </div>
+            <div class="stats-sub-grid">
+              <span id="stats-pvp-wins">PVP WINS: 0</span>
+              <span id="stats-easy-wins">EASY WINS: 0</span>
+              <span id="stats-expert-wins">EXPERT WINS: 0</span>
+              <span id="stats-impossible-wins">IMP WINS: 0</span>
+            </div>
+          </div>
+          
+          <div class="achievements-section">
+            <h3>ACHIEVEMENTS LIST</h3>
+            <div id="achievements-list-container" class="achievements-list">
+              <!-- Dynamically populated achievements will go here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENT TOAST NOTIFICATION -->
+    <div id="achievement-notification" class="achievement-toast">
+      <div class="toast-skew">
+        <div class="toast-text-skew">
+          <span class="toast-title">ACHIEVEMENT UNLOCKED!</span>
+          <span id="toast-achievement-name" class="toast-name">WIN AN IMPOSSIBLE MATCH</span>
         </div>
       </div>
     </div>

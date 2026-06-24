@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let soundEnabled = true;
   let hapticEnabled = true;
 
+  // Profiles & Achievements State
+  let activeProfileName = null;
+  let xBlocksCount = 0;
+  let opponentHadTwoInARow = false;
+
   // Win combinations for a 3x3 grid (works for both mini and large boards)
   const WIN_LINES = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -67,6 +72,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const winnerTitle = document.getElementById('winner-title');
   const winnerSubtitle = document.getElementById('winner-subtitle');
   const winnerDisplaySymbol = document.getElementById('winner-display-symbol');
+
+  // Player Profile & Achievements DOM
+  const playerNameInput = document.getElementById('player-name-input');
+  const saveProfileBtn = document.getElementById('save-profile-btn');
+  const openAchievementsBtn = document.getElementById('open-achievements-btn');
+  const profileStatusText = document.getElementById('profile-status');
+  
+  const achievementsModal = document.getElementById('achievements-modal');
+  const closeAchievementsBtn = document.getElementById('close-achievements-btn');
+  const statsActiveProfile = document.getElementById('stats-active-profile');
+  const statWins = document.getElementById('stat-wins');
+  const statLosses = document.getElementById('stat-losses');
+  const statTies = document.getElementById('stat-ties');
+  
+  const statsPvPWins = document.getElementById('stats-pvp-wins');
+  const statsEasyWins = document.getElementById('stats-easy-wins');
+  const statsExpertWins = document.getElementById('stats-expert-wins');
+  const statsImpossibleWins = document.getElementById('stats-impossible-wins');
+  const achievementsListContainer = document.getElementById('achievements-list-container');
+  
+  const achievementNotification = document.getElementById('achievement-notification');
+  const toastAchievementName = document.getElementById('toast-achievement-name');
 
   // Cells
   const cells = document.querySelectorAll('.cell');
@@ -473,6 +500,8 @@ document.addEventListener('DOMContentLoaded', () => {
     activeBoardIndex = -1; // -1 means wildcard
     gameActive = true;
     winner = null;
+    xBlocksCount = 0;
+    opponentHadTwoInARow = false;
     updateMainMenuButtons();
 
     // Reset visual elements
@@ -555,6 +584,13 @@ document.addEventListener('DOMContentLoaded', () => {
       prevGameWinner: winner
     });
 
+    // Check for block (before mutating board state)
+    if (currentPlayer === 'X') {
+      if (isBlockingMove(boardIndex, cellIndex, 'O')) {
+        xBlocksCount++;
+      }
+    }
+
     // Update board state
     board[boardIndex][cellIndex] = currentPlayer;
     
@@ -575,6 +611,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       playSynthSound('board-win');
       triggerHaptic('success');
+      
+      // First blood achievement check
+      if (currentPlayer === 'X') {
+        unlockAchievement('first_blood');
+      }
       
       // Check if this wins the entire game
       if (check3x3Win(miniBoardsWon, currentPlayer)) {
@@ -619,6 +660,11 @@ document.addEventListener('DOMContentLoaded', () => {
       activeBoardIndex = -1; // Wildcard!
     } else {
       activeBoardIndex = targetBoard;
+    }
+
+    // Check if opponent got a threat line on the large board
+    if (countTwoInARows(miniBoardsWon, 'O') > 0) {
+      opponentHadTwoInARow = true;
     }
 
     // Switch player turn
@@ -844,6 +890,112 @@ document.addEventListener('DOMContentLoaded', () => {
         playSynthSound('defeat');
       }
     }
+
+    // Stats & Achievements Integration
+    if (activeProfileName) {
+      const data = getProfileData(activeProfileName);
+
+      if (gameMode === 'PvP') {
+        if (gameWinner === 'X' || gameWinner === 'O') {
+          data.pvpWins = (data.pvpWins || 0) + 1;
+          data.wins++;
+          saveProfileData(activeProfileName, data);
+          unlockAchievement('win_pvp');
+        } else if (gameWinner === 'tie') {
+          data.ties++;
+          saveProfileData(activeProfileName, data);
+          unlockAchievement('grid_lock');
+        }
+      } else if (gameMode === 'PvNPC') {
+        if (gameWinner === 'X') {
+          // Player Wins
+          data.wins++;
+          if (npcDifficulty === 'easy') {
+            data.easyWins = (data.easyWins || 0) + 1;
+            data.streaks.easy = (data.streaks.easy || 0) + 1;
+            saveProfileData(activeProfileName, data);
+            
+            unlockAchievement('win_easy');
+            if (data.streaks.easy >= 3) {
+              unlockAchievement('streak_easy');
+            }
+          } else if (npcDifficulty === 'expert') {
+            data.expertWins = (data.expertWins || 0) + 1;
+            data.streaks.expert = (data.streaks.expert || 0) + 1;
+            saveProfileData(activeProfileName, data);
+            
+            unlockAchievement('win_expert');
+            if (data.streaks.expert >= 3) {
+              unlockAchievement('streak_expert');
+            }
+          } else if (npcDifficulty === 'impossible') {
+            data.impossibleWins = (data.impossibleWins || 0) + 1;
+            data.streaks.impossible = (data.streaks.impossible || 0) + 1;
+            saveProfileData(activeProfileName, data);
+            
+            unlockAchievement('win_impossible');
+            if (data.streaks.impossible >= 3) {
+              unlockAchievement('streak_impossible');
+            }
+          }
+
+          // Check winning line orientation
+          const hasHorizontal = [ [0,1,2], [3,4,5], [6,7,8] ].some(line => line.every(idx => miniBoardsWon[idx] === 'X'));
+          const hasVertical = [ [0,3,6], [1,4,7], [2,5,8] ].some(line => line.every(idx => miniBoardsWon[idx] === 'X'));
+          const hasDiagonal = [ [0,4,8], [2,4,6] ].some(line => line.every(idx => miniBoardsWon[idx] === 'X'));
+
+          if (hasHorizontal) unlockAchievement('win_horizontal');
+          if (hasVertical) unlockAchievement('win_vertical');
+          if (hasDiagonal) unlockAchievement('win_diagonal');
+
+          // Check wildcard_win
+          const lastMove = moveHistory[moveHistory.length - 1];
+          if (lastMove && lastMove.prevActiveBoardIndex === -1) {
+            unlockAchievement('wildcard_win');
+          }
+
+          // Check flawless_win (NPC O claimed 0 boards)
+          const npcBoardWins = miniBoardsWon.filter(w => w === 'O').length;
+          if (npcBoardWins === 0) {
+            unlockAchievement('flawless_win');
+          }
+
+          // Check close_call
+          if (opponentHadTwoInARow) {
+            unlockAchievement('close_call');
+          }
+
+          // Check block_master
+          if (xBlocksCount >= 5) {
+            unlockAchievement('block_master');
+          }
+
+          // Check speedrun (Win in 12 or fewer moves by Player X)
+          const xMovesCount = moveHistory.filter(m => m.player === 'X').length;
+          if (xMovesCount <= 12) {
+            unlockAchievement('speedrun');
+          }
+
+        } else if (gameWinner === 'O') {
+          // NPC Wins (Player Loss)
+          data.losses++;
+          // Reset streaks on defeat
+          data.streaks.easy = 0;
+          data.streaks.expert = 0;
+          data.streaks.impossible = 0;
+          saveProfileData(activeProfileName, data);
+        } else if (gameWinner === 'tie') {
+          // Tie
+          data.ties++;
+          // Reset streaks on tie
+          data.streaks.easy = 0;
+          data.streaks.expert = 0;
+          data.streaks.impossible = 0;
+          saveProfileData(activeProfileName, data);
+          unlockAchievement('grid_lock');
+        }
+      }
+    }
   }
 
   // --- NPC STRATEGIC ENGINE ---
@@ -894,14 +1046,9 @@ document.addEventListener('DOMContentLoaded', () => {
         chosenMove = findBestNpcMoveMinimax(legalMoves, 3);
       }
     } else if (npcDifficulty === 'impossible') {
-      // Impossible Mode: 5% blunder rate, 4-ply Minimax lookahead (capped at 3 on wildcard turns for safety)
-      if (roll < 0.05) {
-        const randomIdx = Math.floor(Math.random() * legalMoves.length);
-        chosenMove = legalMoves[randomIdx];
-      } else {
-        const depth = (activeBoardIndex === -1) ? 3 : 4;
-        chosenMove = findBestNpcMoveMinimax(legalMoves, depth);
-      }
+      // Impossible Mode: 0% blunder rate, 4-ply Minimax lookahead (capped at 3 on wildcard turns for safety)
+      const depth = (activeBoardIndex === -1) ? 3 : 4;
+      chosenMove = findBestNpcMoveMinimax(legalMoves, depth);
     }
 
     if (chosenMove) {
@@ -1504,6 +1651,214 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // --- PLAYER PROFILES & ACHIEVEMENTS MANAGEMENT ---
+
+  // Checks if a player's move blocks the opponent's immediate win threat on a mini-board
+  function isBlockingMove(boardIndex, cellIndex, opponent) {
+    const miniGrid = board[boardIndex];
+    if (miniGrid[cellIndex] !== '') return false;
+    
+    return WIN_LINES.some(line => {
+      if (!line.includes(cellIndex)) return false;
+      let opponentCount = 0;
+      let emptyCount = 0;
+      line.forEach(idx => {
+        if (miniGrid[idx] === opponent) opponentCount++;
+        else if (miniGrid[idx] === '') emptyCount++;
+      });
+      return opponentCount === 2 && emptyCount === 1;
+    });
+  }
+
+  const ACHIEVEMENTS_DEF = [
+    { id: 'win_easy', name: 'Easy Conqueror', desc: 'Win an Easy match' },
+    { id: 'win_expert', name: 'Expert Tactician', desc: 'Win an Expert match' },
+    { id: 'win_impossible', name: 'Impossible Slayer', desc: 'Win an Impossible match' },
+    { id: 'win_pvp', name: 'Local Champion', desc: 'Win a PvP match' },
+    { id: 'win_diagonal', name: 'Diagonal Dominance', desc: 'Win a match with a diagonal line' },
+    { id: 'win_horizontal', name: 'Horizontal Sweep', desc: 'Win a match with a horizontal line' },
+    { id: 'win_vertical', name: 'Vertical Crush', desc: 'Win a match with a vertical line' },
+    { id: 'streak_easy', name: 'Easy Streak', desc: 'Win 3 consecutive Easy matches' },
+    { id: 'streak_expert', name: 'Expert Streak', desc: 'Win 3 consecutive Expert matches' },
+    { id: 'streak_impossible', name: 'Impossible Streak', desc: 'Win 3 consecutive Impossible matches' },
+    { id: 'grid_lock', name: 'Grid Lock', desc: 'End a match in a tie' },
+    { id: 'wildcard_win', name: 'Wildcard Legend', desc: 'Win on a wildcard turn' },
+    { id: 'flawless_win', name: 'Flawless Victory', desc: 'Win PvNPC without NPC claiming any boards' },
+    { id: 'close_call', name: 'Close Call', desc: 'Win after NPC gets a 2-in-a-row threat on the large board' },
+    { id: 'block_master', name: 'Block Master', desc: 'Block NPC/opponent 5 times in a single game' },
+    { id: 'first_blood', name: 'First Blood', desc: 'Claim your first mini-board block' },
+    { id: 'speedrun', name: 'Speedrunner', desc: 'Win a match in 12 or fewer player moves' }
+  ];
+
+  function getProfiles() {
+    const raw = localStorage.getItem('tictacx2_profiles');
+    if (!raw) return {};
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function getProfileData(name) {
+    const profiles = getProfiles();
+    if (!profiles[name]) {
+      profiles[name] = {
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        pvpWins: 0,
+        easyWins: 0,
+        expertWins: 0,
+        impossibleWins: 0,
+        streaks: {
+          easy: 0,
+          expert: 0,
+          impossible: 0
+        },
+        achievements: []
+      };
+    }
+    const p = profiles[name];
+    if (p.wins === undefined) p.wins = 0;
+    if (p.losses === undefined) p.losses = 0;
+    if (p.ties === undefined) p.ties = 0;
+    if (p.pvpWins === undefined) p.pvpWins = 0;
+    if (p.easyWins === undefined) p.easyWins = 0;
+    if (p.expertWins === undefined) p.expertWins = 0;
+    if (p.impossibleWins === undefined) p.impossibleWins = 0;
+    if (!p.streaks) p.streaks = { easy: 0, expert: 0, impossible: 0 };
+    if (!p.achievements) p.achievements = [];
+    return p;
+  }
+
+  function saveProfileData(name, data) {
+    const profiles = getProfiles();
+    profiles[name] = data;
+    localStorage.setItem('tictacx2_profiles', JSON.stringify(profiles));
+  }
+
+  function unlockAchievement(id) {
+    if (!activeProfileName) return;
+    const data = getProfileData(activeProfileName);
+    if (data.achievements.includes(id)) return; // Already unlocked
+
+    data.achievements.push(id);
+    saveProfileData(activeProfileName, data);
+
+    // Trigger visual toast
+    const ach = ACHIEVEMENTS_DEF.find(a => a.id === id);
+    if (ach) {
+      showAchievementToast(ach.name);
+    }
+  }
+
+  let toastTimeout = null;
+  function showAchievementToast(name) {
+    toastAchievementName.textContent = name;
+    achievementNotification.classList.add('show');
+    playAudioFile('audio/Button_2.mp3');
+
+    if (toastTimeout) {
+      clearTimeout(toastTimeout);
+    }
+    toastTimeout = setTimeout(() => {
+      achievementNotification.classList.remove('show');
+    }, 4000);
+  }
+
+  function updateAchievementsModal() {
+    if (!activeProfileName) {
+      statsActiveProfile.textContent = 'NONE';
+      statWins.textContent = '0';
+      statLosses.textContent = '0';
+      statTies.textContent = '0';
+      statsPvPWins.textContent = 'PVP WINS: 0';
+      statsEasyWins.textContent = 'EASY WINS: 0';
+      statsExpertWins.textContent = 'EXPERT WINS: 0';
+      statsImpossibleWins.textContent = 'IMP WINS: 0';
+      renderAchievementsList([]);
+      return;
+    }
+
+    const data = getProfileData(activeProfileName);
+    statsActiveProfile.textContent = activeProfileName;
+    statWins.textContent = data.wins;
+    statLosses.textContent = data.losses;
+    statTies.textContent = data.ties;
+    statsPvPWins.textContent = `PVP WINS: ${data.pvpWins || 0}`;
+    statsEasyWins.textContent = `EASY WINS: ${data.easyWins || 0}`;
+    statsExpertWins.textContent = `EXPERT WINS: ${data.expertWins || 0}`;
+    statsImpossibleWins.textContent = `IMP WINS: ${data.impossibleWins || 0}`;
+    renderAchievementsList(data.achievements);
+  }
+
+  function renderAchievementsList(unlockedIds) {
+    achievementsListContainer.innerHTML = '';
+    ACHIEVEMENTS_DEF.forEach(ach => {
+      const isUnlocked = unlockedIds.includes(ach.id);
+      const itemEl = document.createElement('div');
+      itemEl.className = `achievement-item ${isUnlocked ? 'unlocked' : ''}`;
+      itemEl.innerHTML = `
+        <div class="achievement-details">
+          <span class="achievement-name">${ach.name}</span>
+          <span class="achievement-desc">${ach.desc}</span>
+        </div>
+        <span class="achievement-status">${isUnlocked ? 'UNLOCKED' : 'LOCKED'}</span>
+      `;
+      achievementsListContainer.appendChild(itemEl);
+    });
+  }
+
+  function initProfile() {
+    activeProfileName = localStorage.getItem('tictacx2_active_profile');
+    if (activeProfileName) {
+      profileStatusText.innerHTML = `Active Profile: <span class="profile-highlight">${activeProfileName}</span>`;
+      playerNameInput.value = activeProfileName;
+    } else {
+      profileStatusText.innerHTML = `Active Profile: <span class="profile-highlight">NONE</span>`;
+    }
+
+    saveProfileBtn.addEventListener('click', () => {
+      const name = playerNameInput.value.trim().toUpperCase();
+      if (/^[A-Z]{3}$/.test(name)) {
+        activeProfileName = name;
+        localStorage.setItem('tictacx2_active_profile', activeProfileName);
+        
+        const data = getProfileData(activeProfileName);
+        saveProfileData(activeProfileName, data);
+
+        profileStatusText.innerHTML = `Active Profile: <span class="profile-highlight">${activeProfileName}</span>`;
+        playSynthSound('click');
+      } else {
+        playSynthSound('error');
+        playerNameInput.classList.add('shake');
+        setTimeout(() => playerNameInput.classList.remove('shake'), 400);
+      }
+    });
+
+    openAchievementsBtn.addEventListener('click', () => {
+      playSynthSound('click');
+      updateAchievementsModal();
+      achievementsModal.classList.add('active');
+    });
+
+    closeAchievementsBtn.addEventListener('click', () => {
+      playSynthSound('click');
+      achievementsModal.classList.remove('active');
+    });
+
+    achievementsModal.addEventListener('click', (e) => {
+      if (e.target === achievementsModal) {
+        playSynthSound('click');
+        achievementsModal.classList.remove('active');
+      }
+    });
+  }
+
+  // Initialize profile features
+  initProfile();
 
   // Trigger initial logo impact and background drift angle
   setTimeout(triggerLogoImpact, 100);
