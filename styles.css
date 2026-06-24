@@ -8,11 +8,11 @@ html {
   font-size: 16px;
 }
 
-@media (max-width: 600px) {
+/* @media (max-width: 600px) {
   html {
     font-size: calc(16px * (100vw / 600));
   }
-}
+} */
 
 /* Design Tokens & Theme Setup */
 :root {
@@ -100,13 +100,24 @@ body {
   opacity: 0.06;
 }
 
+#app-scaler {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 .app-container {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: 600px;
+  width: 600px; /* Fixed logical layout width */
   padding: 1rem;
   box-sizing: border-box;
+  flex-shrink: 0;
+  transform-origin: center center;
 }
 
 /* Typography resets */
@@ -1812,7 +1823,7 @@ button:focus-visible {
    ========================================================================== */
 
 /* Resize board on mobile screens */
-@media (max-width: 480px) {
+/* @media (max-width: 480px) {
   .app-container {
     padding: 1rem 1.2rem;
   }
@@ -1892,7 +1903,7 @@ button:focus-visible {
     gap: 1.5px;
   }
   
-  /* Make X marker thinner on mobile */
+  / * Make X marker thinner on mobile * /
   .cell.x::before, .cell.x::after {
     height: 60%;
   }
@@ -1908,7 +1919,7 @@ button:focus-visible {
     height: 38px;
     border-width: 9px;
   }
-}
+} */
 
 /* Error feedback shake animation */
 .mini-board.shake,

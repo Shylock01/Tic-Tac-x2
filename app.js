@@ -108,6 +108,46 @@ document.addEventListener('DOMContentLoaded', () => {
   const cells = document.querySelectorAll('.cell');
   const miniBoards = document.querySelectorAll('.mini-board');
 
+  // --- ASPECT RATIO VIEWPORT SCALING ---
+  function adjustAppScale() {
+    if (!appContainer) return;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const targetWidth = 600; // Fixed logical layout width
+    
+    // Read the unscaled offset height of the container
+    const targetHeight = appContainer.offsetHeight || 800;
+    
+    // Scale factors to fit both width and height
+    const scaleX = viewportWidth / targetWidth;
+    const scaleY = viewportHeight / targetHeight;
+    
+    // Contain scale to the smaller dimension, capped at 1.0
+    let scale = Math.min(scaleX, scaleY);
+    if (scale > 1) {
+      scale = 1;
+    }
+    
+    appContainer.style.transform = `scale(${scale})`;
+  }
+  
+  window.addEventListener('resize', adjustAppScale);
+  window.addEventListener('load', adjustAppScale);
+  adjustAppScale();
+
+  // Automatically re-scale when view/modal states change
+  if (appContainer) {
+    const scaleObserver = new MutationObserver(() => {
+      adjustAppScale();
+    });
+    scaleObserver.observe(appContainer, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+      attributeFilter: ['class']
+    });
+  }
+
   // --- AUDIO SYNTHESISER ---
   // Web Audio Context initialized lazily on first user interaction to comply with browser autoplay policies
   let audioCtx = null;
