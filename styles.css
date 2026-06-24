@@ -1998,13 +1998,68 @@ button:focus-visible {
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
-.profile-status-text {
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  margin-top: 0.5rem;
+.profile-buttons-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  width: 100%;
+}
+
+.profile-select-btn {
+  background: var(--card-bg);
+  border: 2px solid #ffffff;
+  padding: 0.4rem 1rem;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 1.4rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  color: #ffffff;
+  transform: skewX(-8deg);
+  cursor: pointer;
+  transition: all 0.15s var(--ease-snap);
+}
+
+.profile-select-btn span {
+  display: inline-block;
+  transform: skewX(8deg);
+}
+
+.profile-select-btn:hover {
+  transform: skewX(-8deg) translate(-2px, -2px);
+  box-shadow: 4px 4px 0px var(--accent-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-select-btn:active {
+  transform: skewX(-8deg) translate(1px, 1px);
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+}
+
+.profile-select-btn.active {
+  background: #FE004D !important;
+  box-shadow: 3px 3px 0px #ffffff !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+.easy-mode .profile-select-btn.active {
+  background: #4700FE !important;
+  box-shadow: 3px 3px 0px #A000FF !important;
+  color: #ffffff !important;
+}
+
+.expert-mode .profile-select-btn.active {
+  background: #FEFE00 !important;
+  box-shadow: 3px 3px 0px #FE6A00 !important;
+  color: #0f1015 !important;
+}
+
+.impossible-mode .profile-select-btn.active {
+  background: #FE004D !important;
+  box-shadow: 3px 3px 0px #ffffff !important;
+  color: #ffffff !important;
 }
 
 .profile-highlight {

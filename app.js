@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const playerNameInput = document.getElementById('player-name-input');
   const saveProfileBtn = document.getElementById('save-profile-btn');
   const openAchievementsBtn = document.getElementById('open-achievements-btn');
-  const profileStatusText = document.getElementById('profile-status');
+  const profileButtonsList = document.getElementById('profile-buttons-list');
   
   const achievementsModal = document.getElementById('achievements-modal');
   const closeAchievementsBtn = document.getElementById('close-achievements-btn');
@@ -1811,14 +1811,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function updateProfileButtonsList() {
+    profileButtonsList.innerHTML = '';
+    const profiles = getProfiles();
+    const names = Object.keys(profiles).sort();
+    
+    names.forEach(name => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'profile-select-btn';
+      if (name === activeProfileName) {
+        btn.classList.add('active');
+      }
+      btn.innerHTML = `<span>${name}</span>`;
+      btn.addEventListener('click', () => {
+        activeProfileName = name;
+        localStorage.setItem('tictacx2_active_profile', activeProfileName);
+        playerNameInput.value = name;
+        playSynthSound('click');
+        updateProfileButtonsList();
+      });
+      profileButtonsList.appendChild(btn);
+    });
+  }
+
   function initProfile() {
     activeProfileName = localStorage.getItem('tictacx2_active_profile');
     if (activeProfileName) {
-      profileStatusText.innerHTML = `Active Profile: <span class="profile-highlight">${activeProfileName}</span>`;
       playerNameInput.value = activeProfileName;
-    } else {
-      profileStatusText.innerHTML = `Active Profile: <span class="profile-highlight">NONE</span>`;
     }
+    updateProfileButtonsList();
 
     saveProfileBtn.addEventListener('click', () => {
       const name = playerNameInput.value.trim().toUpperCase();
@@ -1829,8 +1851,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = getProfileData(activeProfileName);
         saveProfileData(activeProfileName, data);
 
-        profileStatusText.innerHTML = `Active Profile: <span class="profile-highlight">${activeProfileName}</span>`;
         playSynthSound('click');
+        updateProfileButtonsList();
       } else {
         playSynthSound('error');
         playerNameInput.classList.add('shake');
